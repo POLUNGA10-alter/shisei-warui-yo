@@ -8,6 +8,7 @@ import {
   INTERVAL_OPTIONS,
   type Stretch,
 } from "@/data/stretches";
+import { usePushNotification } from "@/hooks/usePushNotification";
 
 /** ランダムに1つ選ぶ */
 function pickRandom<T>(arr: T[]): T {
@@ -34,15 +35,22 @@ export default function PostureReminder() {
   const [currentStretch, setCurrentStretch] = useState<Stretch | null>(null);
   const [stretchTimer, setStretchTimer] = useState(0);
   const [todayCount, setTodayCount] = useState(0);
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const stretchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // --- 通知許可チェック ---
+  // --- Firebase Push通知フック ---
+  // Push通知の許可状態・トークン取得・エラー処理をまとめたフック
+  const {
+    isSupported: isPushSupported,
+    permission: pushPermission,
+    token: pushToken,
+    loading: pushLoading,
+    error: pushError,
+    requestPermission: requestPushPermission,
+  } = usePushNotification();
+
+  // --- 今日のカウント復元 ---
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setNotificationPermission(Notification.permission);
-    }
     const today = new Date().toDateString();
     const saved = localStorage.getItem("shisei-count");
     if (saved) {
@@ -60,11 +68,13 @@ export default function PostureReminder() {
   }, [todayCount]);
 
   // --- 通知を送る ---
+  // ブラウザの Notification API で直接通知を出す（フォアグラウンド時）
+  // バックグラウンド時はService Workerが自動で処理するので、ここでは画面表示中の通知のみ
   const sendNotification = useCallback((message: string) => {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate([200, 100, 200]);
     }
-    if (notificationPermission === "granted") {
+    if (pushPermission === "granted") {
       try {
         new Notification("姿勢チェック", {
           body: message,
@@ -75,7 +85,7 @@ export default function PostureReminder() {
         // モバイルではnew Notification()が失敗する場合がある
       }
     }
-  }, [notificationPermission]);
+  }, [pushPermission]);
 
   // --- タイマー開始 ---
   const startTimer = useCallback(() => {
@@ -147,11 +157,10 @@ export default function PostureReminder() {
   }, [startTimer]);
 
   // --- 通知許可を求める ---
+  // 旧: ブラウザのNotification.requestPermission()だけ
+  // 新: Firebase Push通知のトークン取得まで一括で行う
   const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
-      const perm = await Notification.requestPermission();
-      setNotificationPermission(perm);
-    }
+    await requestPushPermission();
   };
 
   // --- クリーンアップ ---
@@ -218,17 +227,30 @@ export default function PostureReminder() {
               </div>
 
               {/* 通知設定 */}
-              {typeof window !== "undefined" && "Notification" in window && notificationPermission !== "granted" && (
+              {isPushSupported && pushPermission !== "granted" && (
                 <div className="card bg-amber-50 dark:bg-amber-900/20">
                   <p className="mb-2 text-sm text-amber-800 dark:text-amber-300">
-                    🔔 通知をオンにすると、画面を見ていない時もリマインドします
+                    🔔 通知をオンにすると、アプリを閉じていてもリマインドします
                   </p>
                   <button
                     onClick={requestNotificationPermission}
-                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 touch-target"
+                    disabled={pushLoading}
+                    className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:opacity-50 touch-target"
                   >
-                    通知を許可する
+                    {pushLoading ? "設定中..." : "🔔 Push通知を許可する"}
                   </button>
+                  {pushError && (
+                    <p className="mt-2 text-xs text-red-600 dark:text-red-400">{pushError}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Push通知 許可済み表示 */}
+              {isPushSupported && pushPermission === "granted" && pushToken && (
+                <div className="card bg-green-50 dark:bg-green-900/20">
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    ✅ Push通知が有効です（アプリを閉じても通知が届きます）
+                  </p>
                 </div>
               )}
 
