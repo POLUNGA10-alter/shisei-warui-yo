@@ -39,14 +39,16 @@ export default function PostureReminder() {
   const stretchTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // --- Firebase Push通知フック ---
-  // Push通知の許可状態・トークン取得・エラー処理をまとめたフック
+  // Push通知の許可状態・トークン取得・サーバー登録をまとめたフック
   const {
     isSupported: isPushSupported,
     permission: pushPermission,
-    token: pushToken,
     loading: pushLoading,
     error: pushError,
-    requestPermission: requestPushPermission,
+    isActive: isPushActive,
+    subscribe: pushSubscribe,
+    unsubscribe: pushUnsubscribe,
+    updateInterval: pushUpdateInterval,
   } = usePushNotification();
 
   // --- 今日のカウント復元 ---
@@ -157,10 +159,23 @@ export default function PostureReminder() {
   }, [startTimer]);
 
   // --- 通知許可を求める ---
-  // 旧: ブラウザのNotification.requestPermission()だけ
-  // 新: Firebase Push通知のトークン取得まで一括で行う
+  // Firebase Push通知のトークン取得 + サーバーに登録
   const requestNotificationPermission = async () => {
-    await requestPushPermission();
+    await pushSubscribe(intervalMin);
+  };
+
+  // --- 通知をOFFにする ---
+  const disableNotifications = async () => {
+    await pushUnsubscribe();
+  };
+
+  // --- 間隔変更時にサーバーの間隔も更新 ---
+  const handleIntervalChange = (newInterval: number) => {
+    setIntervalMin(newInterval);
+    // Push通知がアクティブなら、サーバー側の間隔も更新
+    if (isPushActive) {
+      pushUpdateInterval(newInterval);
+    }
   };
 
   // --- クリーンアップ ---
@@ -213,7 +228,7 @@ export default function PostureReminder() {
                   {INTERVAL_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
-                      onClick={() => setIntervalMin(opt.value)}
+                      onClick={() => handleIntervalChange(opt.value)}
                       className={`rounded-xl px-3 py-3 text-sm font-medium transition-all touch-target ${
                         intervalMin === opt.value
                           ? "bg-primary-600 text-white shadow-md"
@@ -226,8 +241,8 @@ export default function PostureReminder() {
                 </div>
               </div>
 
-              {/* 通知設定 */}
-              {isPushSupported && pushPermission !== "granted" && (
+              {/* 通知設定: まだ許可していない場合 */}
+              {isPushSupported && !isPushActive && pushPermission !== "denied" && (
                 <div className="card bg-amber-50 dark:bg-amber-900/20">
                   <p className="mb-2 text-sm text-amber-800 dark:text-amber-300">
                     🔔 通知をオンにすると、アプリを閉じていてもリマインドします
@@ -237,7 +252,7 @@ export default function PostureReminder() {
                     disabled={pushLoading}
                     className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:opacity-50 touch-target"
                   >
-                    {pushLoading ? "設定中..." : "🔔 Push通知を許可する"}
+                    {pushLoading ? "設定中..." : "🔔 Push通知をオンにする"}
                   </button>
                   {pushError && (
                     <p className="mt-2 text-xs text-red-600 dark:text-red-400">{pushError}</p>
@@ -245,12 +260,38 @@ export default function PostureReminder() {
                 </div>
               )}
 
-              {/* Push通知 許可済み表示 */}
-              {isPushSupported && pushPermission === "granted" && pushToken && (
-                <div className="card bg-green-50 dark:bg-green-900/20">
-                  <p className="text-sm text-green-700 dark:text-green-400">
-                    ✅ Push通知が有効です（アプリを閉じても通知が届きます）
+              {/* 通知設定: ブラウザで拒否された場合 */}
+              {isPushSupported && pushPermission === "denied" && (
+                <div className="card bg-gray-50 dark:bg-gray-800">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    🔕 通知がブロックされています。ブラウザの設定から許可してください。
                   </p>
+                </div>
+              )}
+
+              {/* 通知設定: ON状態 → OFFにできる */}
+              {isPushSupported && isPushActive && (
+                <div className="card bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                        ✅ Push通知ON
+                      </p>
+                      <p className="text-xs text-green-600 dark:text-green-500">
+                        {intervalMin}分ごとに通知が届きます（アプリを閉じてもOK）
+                      </p>
+                    </div>
+                    <button
+                      onClick={disableNotifications}
+                      disabled={pushLoading}
+                      className="rounded-lg bg-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    >
+                      {pushLoading ? "処理中..." : "OFFにする"}
+                    </button>
+                  </div>
+                  {pushError && (
+                    <p className="mt-2 text-xs text-red-600 dark:text-red-400">{pushError}</p>
+                  )}
                 </div>
               )}
 
