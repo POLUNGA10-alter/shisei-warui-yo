@@ -23,7 +23,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin, type DeviceTokenRow } from "@/lib/supabase";
 import { getAdminMessaging } from "@/lib/firebase-admin";
 
 // 姿勢チェックメッセージ（ランダムで1つ選ぶ）
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     // --- アクティブなデバイストークンを取得 ---
-    const { data: tokens, error: fetchError } = await supabaseAdmin
+    const { data, error: fetchError } = await getSupabaseAdmin()
       .from("device_tokens")
       .select("*")
       .eq("is_active", true);
@@ -74,7 +74,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "DB error" }, { status: 500 });
     }
 
-    if (!tokens || tokens.length === 0) {
+    const tokens = (data ?? []) as DeviceTokenRow[];
+
+    if (tokens.length === 0) {
       return NextResponse.json({ message: "通知対象なし", sent: 0 });
     }
 
@@ -117,7 +119,7 @@ export async function GET(request: NextRequest) {
         });
 
         // 送信成功 → last_notified_at を更新
-        await supabaseAdmin
+        await getSupabaseAdmin()
           .from("device_tokens")
           .update({ last_notified_at: now.toISOString() })
           .eq("id", tokenRow.id);
@@ -134,7 +136,7 @@ export async function GET(request: NextRequest) {
           errorMessage.includes("not-registered") ||
           errorMessage.includes("invalid-registration-token")
         ) {
-          await supabaseAdmin
+          await getSupabaseAdmin()
             .from("device_tokens")
             .update({ is_active: false, updated_at: new Date().toISOString() })
             .eq("id", tokenRow.id);

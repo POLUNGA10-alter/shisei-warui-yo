@@ -18,7 +18,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Supabaseにトークンを保存（upsert: あれば更新、なければ挿入）
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from("device_tokens")
       .upsert(
         {

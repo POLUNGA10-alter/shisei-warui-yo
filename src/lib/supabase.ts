@@ -21,6 +21,20 @@
 
 import { createClient } from "@supabase/supabase-js";
 
+/**
+ * device_tokens テーブルの行の型定義
+ * APIルートでDBデータを扱う際にこの型を使う。
+ */
+export interface DeviceTokenRow {
+  id: number;
+  fcm_token: string;
+  interval_minutes: number;
+  is_active: boolean;
+  last_notified_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // ブラウザ用クライアント（制限付き権限）
 // NEXT_PUBLIC_ で始まる環境変数はブラウザからも読める
 export const supabase = createClient(
@@ -30,7 +44,16 @@ export const supabase = createClient(
 
 // サーバー用クライアント（フル権限）
 // SUPABASE_SERVICE_ROLE_KEY はサーバー側でのみ使用（ブラウザに露出しない）
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// 遅延初期化：ビルド時には環境変数がまだ無い場合があるため、関数呼び出し時に生成する
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getSupabaseAdmin(): any {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabaseAdmin;
+}

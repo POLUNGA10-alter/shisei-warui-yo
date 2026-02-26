@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // is_active を false にして、Cron Jobの対象外にする
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from("device_tokens")
       .update({
         is_active: false,
