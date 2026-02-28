@@ -85,15 +85,20 @@ export async function GET(request: NextRequest) {
     let errorCount = 0;
     const errorDetails: { token: string; error: string }[] = [];
 
+    // テストモード: ?force=true で間隔チェックをスキップ
+    const forceMode = request.nextUrl.searchParams.get("force") === "true";
+
     // --- 各トークンについてチェック & 送信 ---
     for (const tokenRow of tokens) {
-      const lastNotified = new Date(tokenRow.last_notified_at);
-      const intervalMs = tokenRow.interval_minutes * 60 * 1000;
-      const nextNotifyTime = new Date(lastNotified.getTime() + intervalMs);
+      if (!forceMode) {
+        const lastNotified = new Date(tokenRow.last_notified_at);
+        const intervalMs = tokenRow.interval_minutes * 60 * 1000;
+        const nextNotifyTime = new Date(lastNotified.getTime() + intervalMs);
 
-      // まだ次の通知時間になっていない場合はスキップ
-      if (now < nextNotifyTime) {
-        continue;
+        // まだ次の通知時間になっていない場合はスキップ
+        if (now < nextNotifyTime) {
+          continue;
+        }
       }
 
       // Push通知を送信
