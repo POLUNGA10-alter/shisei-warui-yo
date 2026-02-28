@@ -134,11 +134,13 @@ export async function GET(request: NextRequest) {
         errorDetails.push({ token: tokenRow.fcm_token.substring(0, 20), error: errorMessage });
 
         // トークンが無効（アンインストール等）ならis_activeをfalseにする
+        const lowerError = errorMessage.toLowerCase();
         if (
-          errorMessage.includes("not-registered") ||
-          errorMessage.includes("invalid-registration-token") ||
-          errorMessage.includes("UNREGISTERED") ||
-          errorMessage.includes("INVALID_ARGUMENT")
+          lowerError.includes("not-registered") ||
+          lowerError.includes("notregistered") ||
+          lowerError.includes("invalid-registration-token") ||
+          lowerError.includes("unregistered") ||
+          lowerError.includes("invalid_argument")
         ) {
           await getSupabaseAdmin()
             .from("device_tokens")
