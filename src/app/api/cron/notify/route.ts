@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     let sentCount = 0;
     let errorCount = 0;
+    const errorDetails: { token: string; error: string }[] = [];
 
     // --- 各トークンについてチェック & 送信 ---
     for (const tokenRow of tokens) {
@@ -130,11 +131,14 @@ export async function GET(request: NextRequest) {
         errorCount++;
         const errorMessage = sendError instanceof Error ? sendError.message : String(sendError);
         console.error(`[Cron] 送信失敗: ${errorMessage}`);
+        errorDetails.push({ token: tokenRow.fcm_token.substring(0, 20), error: errorMessage });
 
         // トークンが無効（アンインストール等）ならis_activeをfalseにする
         if (
           errorMessage.includes("not-registered") ||
-          errorMessage.includes("invalid-registration-token")
+          errorMessage.includes("invalid-registration-token") ||
+          errorMessage.includes("UNREGISTERED") ||
+          errorMessage.includes("INVALID_ARGUMENT")
         ) {
           await getSupabaseAdmin()
             .from("device_tokens")
@@ -150,6 +154,7 @@ export async function GET(request: NextRequest) {
       sent: sentCount,
       errors: errorCount,
       total: tokens.length,
+      errorDetails,
     });
   } catch (err) {
     console.error("[Cron] 予期しないエラー:", err);
