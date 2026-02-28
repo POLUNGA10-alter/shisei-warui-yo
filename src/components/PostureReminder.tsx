@@ -241,6 +241,21 @@ export default function PostureReminder() {
                 </div>
               </div>
 
+              {/* iOS Safari: PWAとしてインストールを促すガイド */}
+              {!isPushSupported && typeof window !== "undefined" && /iPhone|iPad/.test(navigator.userAgent) && !(window.navigator as any).standalone && (
+                <div className="card bg-blue-50 dark:bg-blue-900/20">
+                  <p className="mb-1 text-sm font-medium text-blue-800 dark:text-blue-300">
+                    📲 iPhoneでPush通知を使うには
+                  </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
+                    ① 画面下の <span className="inline-block">共有ボタン（↑）</span>をタップ<br/>
+                    ② 「ホーム画面に追加」を選択<br/>
+                    ③ 追加したアイコンからアプリを開く<br/>
+                    → Push通知が使えるようになります
+                  </p>
+                </div>
+              )}
+
               {/* 通知設定: まだ許可していない場合 */}
               {isPushSupported && !isPushActive && pushPermission !== "denied" && (
                 <div className="card bg-amber-50 dark:bg-amber-900/20">
