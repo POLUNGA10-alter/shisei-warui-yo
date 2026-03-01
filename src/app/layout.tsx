@@ -42,7 +42,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content={metadata.title as string || "App"} />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
         {/* タップ時の300ms遅延を除去 */}
         <meta name="format-detection" content="telephone=no" />
       </head>
