@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ダークモードをクラスベースに切り替え（.darkクラスが付かない限り適用しない） */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ===================================
    マイクロアプリ共通デザインテーマ
    =================================== */
@@ -43,12 +46,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f1a12;
-    --foreground: #ededed;
-  }
-}
+/* ダークモードは使用しない（白基調固定） */
 
 body {
   background: var(--background);

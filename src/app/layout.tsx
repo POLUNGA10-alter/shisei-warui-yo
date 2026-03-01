@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" style={{ colorScheme: 'light' }}>
       <head>
         <AnalyticsScript />
         <link rel="manifest" href="/manifest.json" />
