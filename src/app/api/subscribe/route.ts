@@ -40,28 +40,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Supabaseにトークンを保存（upsert: あれば更新、なければ挿入）
-    const { error } = await getSupabaseAdmin()
+    const now = new Date();
+
+    // 既存トークンがあるか確認
+    const { data: existing } = await getSupabaseAdmin()
       .from("device_tokens")
-      .upsert(
-        {
+      .select("id, last_notified_at")
+      .eq("fcm_token", token)
+      .single();
+
+    if (existing) {
+      // 既存トークン: interval_minutesとis_activeだけ更新（last_notified_atはリセットしない）
+      const { error } = await getSupabaseAdmin()
+        .from("device_tokens")
+        .update({
+          interval_minutes,
+          is_active: true,
+          updated_at: now.toISOString(),
+        })
+        .eq("fcm_token", token);
+
+      if (error) {
+        console.error("[Subscribe] Supabase update error:", error);
+        return NextResponse.json({ error: "トークンの更新に失敗しました" }, { status: 500 });
+      }
+      console.log("[Subscribe] 既存トークン更新（last_notified_atは維持）:", token.substring(0, 20) + "...");
+    } else {
+      // 新規トークン: last_notified_atを「interval分前」にセット → 次のcron（最大1分後）に即通知
+      const firstNotifyTime = new Date(now.getTime() - interval_minutes * 60 * 1000);
+      const { error } = await getSupabaseAdmin()
+        .from("device_tokens")
+        .insert({
           fcm_token: token,
           interval_minutes,
           is_active: true,
-          last_notified_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "fcm_token", // 同じトークンがあれば更新
-        }
-      );
+          last_notified_at: firstNotifyTime.toISOString(),
+          updated_at: now.toISOString(),
+        });
 
-    if (error) {
-      console.error("[Subscribe] Supabase error:", error);
-      return NextResponse.json(
-        { error: "トークンの保存に失敗しました" },
-        { status: 500 }
-      );
+      if (error) {
+        console.error("[Subscribe] Supabase insert error:", error);
+        return NextResponse.json({ error: "トークンの保存に失敗しました" }, { status: 500 });
+      }
+      console.log("[Subscribe] 新規トークン登録（即時通知設定）:", token.substring(0, 20) + "...");
     }
 
     console.log("[Subscribe] トークン登録成功:", token.substring(0, 20) + "...");
