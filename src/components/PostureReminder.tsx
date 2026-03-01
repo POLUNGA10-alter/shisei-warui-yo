@@ -96,14 +96,14 @@ export default function PostureReminder() {
 
           {/* 通知設定: まだ許可していない場合 */}
           {isPushSupported && !isPushActive && pushPermission !== "denied" && (
-            <div className="card bg-amber-50 dark:bg-amber-900/20">
-              <p className="mb-2 text-sm text-amber-800 dark:text-amber-300">
+            <div className="card bg-primary-50 dark:bg-primary-900/20">
+              <p className="mb-2 text-sm text-primary-800 dark:text-primary-300">
                 🔔 通知をオンにすると、アプリを閉じていてもリマインドします
               </p>
               <button
                 onClick={requestNotificationPermission}
                 disabled={pushLoading}
-                className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:opacity-50 touch-target"
+                className="rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50 touch-target"
               >
                 {pushLoading ? "設定中..." : "🔔 Push通知をオンにする"}
               </button>

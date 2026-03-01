@@ -16,11 +16,11 @@ export const APP_CONFIG = {
     portfolioUrl: "",
   },
 
-  // --- テーマカラー ---
+  // --- テーマカラー: ずんだカラー ---
   theme: {
-    primary: "#6366F1",      // インディゴ
-    primaryLight: "#818CF8",
-    primaryDark: "#4338CA",
+    primary: "#22c55e",      // ずんだグリーン
+    primaryLight: "#4ade80",
+    primaryDark: "#16a34a",
     accent: "#F59E0B",
   },
 
