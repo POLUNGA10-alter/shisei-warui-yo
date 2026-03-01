@@ -41,13 +41,12 @@ export default function PostureReminder() {
   return (
     <div className="w-full">
       {/* ヒーローセクション */}
-      <section className="w-full bg-gradient-to-b from-primary-50 to-white px-4 pb-6 pt-10 text-center dark:from-primary-900/20 dark:to-gray-950">
+      <section className="w-full bg-gradient-to-b from-primary-50 to-white px-4 pb-6 pt-10 text-center">
         <div className="mx-auto max-w-md">
-          <p className="mb-2 text-5xl">🪑</p>
-          <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="mb-2 text-2xl font-bold text-gray-900">
             姿勢悪いよ
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500">
             定期的に姿勢をチェックして、猫背・肩こりを予防
           </p>
         </div>
