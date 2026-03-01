@@ -47,7 +47,7 @@ export default function PostureReminder() {
             姿勢悪いよ
           </h1>
           <p className="text-sm text-gray-500">
-            定期的に姿勢をチェックして、猫背・肩こりを予防
+            定期的に姿勢をチェック
           </p>
         </div>
       </section>
@@ -157,7 +157,7 @@ export default function PostureReminder() {
           </h2>
           <div className="space-y-3">
             {[
-              { step: "1", emoji: "⏰", text: "リマインド間隔を選ぶ（おすすめは20分）" },
+              { step: "1", emoji: "⏰", text: "リマインド間隔を選ぶ" },
               { step: "2", emoji: "🔔", text: "「Push通知をオンにする」をタップ" },
               { step: "3", emoji: "📱", text: "アプリを閉じてもOK！時間が来たら通知でお知らせ" },
             ].map((item) => (
