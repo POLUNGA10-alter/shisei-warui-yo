@@ -52,25 +52,9 @@ const messaging = firebase.messaging();
  * }
  */
 messaging.onBackgroundMessage((payload) => {
+  // notificationフィールドがあるメッセージはFCMが自動で通知表示するため
+  // ここでは何もしない（手動showNotificationするとブラウザ自動表示と2重になる）
   console.log("[Service Worker] バックグラウンドメッセージ受信:", payload);
-
-  // 通知のタイトルと本文を取得（なければデフォルト値を使う）
-  const title = payload.notification?.title || "姿勢悪いよ";
-  const body = payload.notification?.body || "姿勢をチェックしましょう！";
-
-  // ブラウザ通知のオプション
-  const options = {
-    body: body,
-    icon: "/icon-192.png",       // 通知に表示するアイコン
-    badge: "/icon-192.png",      // Androidの小さいアイコン
-    tag: "posture-reminder",     // 同じタグの通知は上書き（重複防止）
-    renotify: true,              // 同じタグでも再通知する
-    vibrate: [200, 100, 200],    // バイブレーション: 振動→停止→振動
-  };
-
-  // self = Service Worker自身を指す
-  // showNotification() でブラウザ通知を表示する
-  self.registration.showNotification(title, options);
 });
 
 /**
