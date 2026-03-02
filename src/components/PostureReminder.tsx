@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { INTERVAL_OPTIONS } from "@/data/stretches";
 import { usePushNotification } from "@/hooks/usePushNotification";
 
 export default function PostureReminder() {
   // --- State ---
-  const [intervalMin, setIntervalMin] = useState(20);
+  // localStorageから復元（タスクキル後も選択済み間隔を維持）
+  const [intervalMin, setIntervalMin] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("shisei-interval");
+      if (saved) return parseInt(saved, 10);
+    }
+    return 20;
+  });
 
   // --- Firebase Push通知フック ---
   const {
@@ -30,13 +37,21 @@ export default function PostureReminder() {
     await pushUnsubscribe();
   };
 
-  // --- 間隔変更時にサーバーの間隔も更新 ---
+  // --- 間隔変更時にサーバーの間隔も更新 + localStorageに保存 ---
   const handleIntervalChange = (newInterval: number) => {
     setIntervalMin(newInterval);
+    localStorage.setItem("shisei-interval", String(newInterval));
     if (isPushActive) {
       pushUpdateInterval(newInterval);
     }
   };
+
+  // --- Push通知ON時に現在の間隔をlocalStorageに保存（初期登録時の同期） ---
+  useEffect(() => {
+    if (isPushActive) {
+      localStorage.setItem("shisei-interval", String(intervalMin));
+    }
+  }, [isPushActive]);
 
   return (
     <div className="w-full">
