@@ -6,14 +6,17 @@ import { usePushNotification } from "@/hooks/usePushNotification";
 
 export default function PostureReminder() {
   // --- State ---
-  // localStorageから復元（タスクキル後も選択済み間隔を維持）
-  const [intervalMin, setIntervalMin] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("shisei-interval");
-      if (saved) return parseInt(saved, 10);
+  // 初期値は20（SSR対応）。マウント後にlocalStorageから復元してUIを正しく反映
+  const [intervalMin, setIntervalMin] = useState(20);
+
+  // マウント後にlocalStorageから間隔を復元（SSRと不一致にならないようuseEffectで実施）
+  useEffect(() => {
+    const saved = localStorage.getItem("shisei-interval");
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed)) setIntervalMin(parsed);
     }
-    return 20;
-  });
+  }, []);
 
   // --- Firebase Push通知フック ---
   const {
