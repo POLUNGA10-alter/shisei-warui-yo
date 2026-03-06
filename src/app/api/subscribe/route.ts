@@ -20,6 +20,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
+// 許可するリマインド間隔（分）のホワイトリスト
+const ALLOWED_INTERVALS = [10, 15, 20, 30, 45, 60];
+
+// FCMトークンの最小・最大長（一般的なFCMトークンは100〜300文字）
+const FCM_TOKEN_MIN_LENGTH = 100;
+const FCM_TOKEN_MAX_LENGTH = 300;
+
+// FCMトークンの文字種（Base64URL + コロン）
+const FCM_TOKEN_PATTERN = /^[A-Za-z0-9\-_:]+$/;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -33,9 +43,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // FCMトークンの長さ・文字種チェック
+    if (
+      token.length < FCM_TOKEN_MIN_LENGTH ||
+      token.length > FCM_TOKEN_MAX_LENGTH ||
+      !FCM_TOKEN_PATTERN.test(token)
+    ) {
+      return NextResponse.json(
+        { error: "無効なトークンです" },
+        { status: 400 }
+      );
+    }
+
     if (!interval_minutes || typeof interval_minutes !== "number") {
       return NextResponse.json(
         { error: "間隔（分）が必要です" },
+        { status: 400 }
+      );
+    }
+
+    // interval_minutesのホワイトリストチェック
+    if (!ALLOWED_INTERVALS.includes(interval_minutes)) {
+      return NextResponse.json(
+        { error: "無効なリマインド間隔です" },
         { status: 400 }
       );
     }

@@ -54,7 +54,7 @@ export default function PostureReminder() {
     if (isPushActive) {
       localStorage.setItem("shisei-interval", String(intervalMin));
     }
-  }, [isPushActive]);
+  }, [isPushActive, intervalMin]);
 
   return (
     <div className="w-full">

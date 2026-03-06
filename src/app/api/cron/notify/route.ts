@@ -83,22 +83,16 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     let sentCount = 0;
     let errorCount = 0;
-    const errorDetails: { token: string; error: string }[] = [];
-
-    // テストモード: ?force=true で間隔チェックをスキップ
-    const forceMode = request.nextUrl.searchParams.get("force") === "true";
 
     // --- 各トークンについてチェック & 送信 ---
     for (const tokenRow of tokens) {
-      if (!forceMode) {
-        const lastNotified = new Date(tokenRow.last_notified_at);
-        const intervalMs = tokenRow.interval_minutes * 60 * 1000;
-        const nextNotifyTime = new Date(lastNotified.getTime() + intervalMs);
+      const lastNotified = new Date(tokenRow.last_notified_at);
+      const intervalMs = tokenRow.interval_minutes * 60 * 1000;
+      const nextNotifyTime = new Date(lastNotified.getTime() + intervalMs);
 
-        // まだ次の通知時間になっていない場合はスキップ
-        if (now < nextNotifyTime) {
-          continue;
-        }
+      // まだ次の通知時間になっていない場合はスキップ
+      if (now < nextNotifyTime) {
+        continue;
       }
 
       // Push通知を送信
@@ -136,7 +130,6 @@ export async function GET(request: NextRequest) {
         errorCount++;
         const errorMessage = sendError instanceof Error ? sendError.message : String(sendError);
         console.error(`[Cron] 送信失敗: ${errorMessage}`);
-        errorDetails.push({ token: tokenRow.fcm_token.substring(0, 20), error: errorMessage });
 
         // トークンが無効（アンインストール等）ならis_activeをfalseにする
         const lowerError = errorMessage.toLowerCase();
@@ -161,7 +154,6 @@ export async function GET(request: NextRequest) {
       sent: sentCount,
       errors: errorCount,
       total: tokens.length,
-      errorDetails,
     });
   } catch (err) {
     console.error("[Cron] 予期しないエラー:", err);
