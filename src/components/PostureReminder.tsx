@@ -8,6 +8,8 @@ export default function PostureReminder() {
   // --- State ---
   // 初期値は20（SSR対応）。マウント後にlocalStorageから復元してUIを正しく反映
   const [intervalMin, setIntervalMin] = useState(20);
+  // iOS PWA判定（SSRハイドレーションミスマッチ防止のためuseEffectで設定）
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   // マウント後にlocalStorageから間隔を復元（SSRと不一致にならないようuseEffectで実施）
   useEffect(() => {
@@ -15,6 +17,10 @@ export default function PostureReminder() {
     if (saved) {
       const parsed = parseInt(saved, 10);
       if (!isNaN(parsed)) setIntervalMin(parsed);
+    }
+    // iOS Safari（非PWA）判定
+    if (/iPhone|iPad/.test(navigator.userAgent) && !(window.navigator as any).standalone) {
+      setShowIOSGuide(true);
     }
   }, []);
 
@@ -97,7 +103,7 @@ export default function PostureReminder() {
           </div>
 
           {/* iOS Safari: PWAとしてインストールを促すガイド */}
-          {!isPushSupported && typeof window !== "undefined" && /iPhone|iPad/.test(navigator.userAgent) && !(window.navigator as any).standalone && (
+          {!isPushSupported && showIOSGuide && (
             <div className="card bg-blue-50 dark:bg-blue-900/20">
               <p className="mb-1 text-sm font-medium text-blue-800 dark:text-blue-300">
                 📲 iPhoneでPush通知を使うには

@@ -25,20 +25,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdmin, type DeviceTokenRow } from "@/lib/supabase";
 import { getAdminMessaging } from "@/lib/firebase-admin";
-
-// 姿勢チェックメッセージ（ランダムで1つ選ぶ）
-const POSTURE_MESSAGES = [
-  "姿勢が崩れていませんか？背筋を伸ばしましょう！",
-  "猫背になっていませんか？シャキッと！",
-  "肩が上がっていませんか？力を抜きましょう",
-  "画面に近づきすぎていませんか？少し離れましょう",
-  "背中が丸まっていませんか？胸を張りましょう",
-  "首が前に出ていませんか？顎を引きましょう",
-  "そろそろ姿勢チェックの時間です🪑",
-  "デスクワーカーの大敵は猫背です",
-  "一度立ち上がって伸びをしませんか？",
-  "深呼吸して、姿勢をリセットしましょう",
-];
+import { POSTURE_MESSAGES } from "@/data/stretches";
 
 function pickRandom(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];

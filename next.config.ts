@@ -1,13 +1,25 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 開発時の React Strict Mode（2回レンダリング）を無効化
-  // → 本番には影響しない。開発中のパフォーマンス改善のため
-  reactStrictMode: false,
+  reactStrictMode: true,
 
   // firebase-admin はNode.jsネイティブモジュールを使うため、
   // バンドラー（Turbopack/Webpack）でバンドルせず外部パッケージとして扱う
   serverExternalPackages: ["firebase-admin"],
+
+  // セキュリティヘッダー
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
